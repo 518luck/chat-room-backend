@@ -1,4 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { RedisClientType } from 'redis';
 
 @Injectable()
-export class RedisService {}
+export class RedisService {
+  @Inject('REDIS_CLIENT')
+  private redisClient: RedisClientType;
+
+  // 获取缓存值
+  async get(key: string) {
+    return await this.redisClient.get(key);
+  }
+
+  // 设置缓存值
+  async set(key: string, value: string | number, ttl?: number) {
+    // set: 设置缓存值
+    await this.redisClient.set(key, value);
+
+    if (ttl) {
+      await this.redisClient.expire(key, ttl);
+    }
+  }
+}

@@ -33,5 +33,5 @@ export class RegisterUserDto {
   @IsNotEmpty({
     message: '验证码不能为空',
   })
-  captcha?: string;
+  captcha: string;
 }
