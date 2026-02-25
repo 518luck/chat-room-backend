@@ -7,6 +7,7 @@ export class UserService {
   @Inject(PrismaService)
   private prisma: PrismaService;
 
+  // 注册用户
   async create(data: Prisma.UserCreateInput) {
     const user = await this.prisma.user.create({
       data,

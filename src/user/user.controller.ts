@@ -6,8 +6,10 @@ import { RegisterUserDto } from '@/user/dto/register-user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // 注册用户
   @Post('register')
   async register(@Body() registerUser: RegisterUserDto) {
+    delete registerUser.captcha;
     return await this.userService.create(registerUser);
   }
 }
