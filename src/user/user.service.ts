@@ -32,6 +32,7 @@ export class UserService {
       throw new HttpException('验证码不正确', HttpStatus.BAD_REQUEST);
     }
 
+    // 校验用户名是否存在
     const foundUser = await this.prismaService.user.findUnique({
       where: {
         username: user.username,
