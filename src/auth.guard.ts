@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
-import { Request } from 'express';
+import type { Response } from 'express';
 import type { JwtUserData, RequestWithUser } from '@/types/user';
 
 @Injectable()
@@ -23,6 +23,7 @@ export class AuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: RequestWithUser = context.switchToHttp().getRequest();
+    const response: Response = context.switchToHttp().getResponse();
 
     // 不需要登录的接口，直接返回 true
     const requireLogin = this.reflector.getAllAndOverride<boolean>(
@@ -50,6 +51,19 @@ export class AuthGuard implements CanActivate {
         userId: data.userId,
         username: data.username,
       };
+
+      response.header(
+        'token',
+        this.jwtService.sign(
+          {
+            userId: data.userId,
+            username: data.username,
+          },
+          {
+            expiresIn: '7d',
+          },
+        ),
+      );
       return true;
     } catch {
       throw new UnauthorizedException('token 失效，请重新登录');
