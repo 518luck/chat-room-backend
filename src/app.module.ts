@@ -9,6 +9,7 @@ import { EmailModule } from '@/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from '@/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { FriendshipModule } from './friendship/friendship.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { APP_GUARD } from '@nestjs/core';
         };
       },
     }),
+    FriendshipModule,
   ],
   controllers: [AppController],
   providers: [

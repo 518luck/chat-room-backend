@@ -42,3 +42,14 @@ model Friendship {
 
   @@id([userId, friendId])
 }
+
+//好友申请表
+model FriendRequest {
+  id         Int      @id @default(autoincrement()) // 好友请求ID
+  fromUserId Int // 请求发送方
+  toUserId   Int // 待添加好友
+  reason     String   @default("") @db.VarChar(100) // 请求理由
+  status     Int      @default(0) // 请求状态 0: 待处理 1: 已同意 2: 已拒绝
+  createTime DateTime @default(now()) // 创建时间
+  updateTime DateTime @updatedAt // 更新时间
+}
