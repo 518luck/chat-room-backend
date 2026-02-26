@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '@/prisma/prisma.service';
 import { RedisService } from '@/redis/redis.service';
 import { RegisterUserDto } from '@/user/dto/register-user.dto';
+import { LoginUserDto } from '@/user/dto/login-user.dto';
 
 @Injectable()
 export class UserService {
@@ -64,5 +65,27 @@ export class UserService {
       this.logger.error(e, UserService);
       return null;
     }
+  }
+
+  // 用户登录
+  async login(loginUserDto: LoginUserDto) {
+    const foundUser = await this.prismaService.user.findUnique({
+      where: {
+        username: loginUserDto.username,
+      },
+    });
+
+    if (!foundUser) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    if (foundUser.password !== loginUserDto.password) {
+      throw new HttpException('密码错误', HttpStatus.BAD_REQUEST);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...result } = foundUser;
+
+    return result;
   }
 }
