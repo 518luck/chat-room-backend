@@ -5,6 +5,8 @@ import { RedisService } from '@/redis/redis.service';
 import { EmailService } from '@/email/email.service';
 import { LoginUserDto } from '@/user/dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { RequireLogin, UserInfo } from '@/custom.decorator';
+import { UpdateUserPasswordDto } from '@/user/dto/update-user-password.dto';
 
 @Controller('user')
 export class UserController {
@@ -57,5 +59,18 @@ export class UserController {
         },
       ),
     };
+  }
+
+  // 查询用户详情(用来返现)
+  @Get('info')
+  @RequireLogin()
+  info(@UserInfo('userId') userId: number) {
+    return this.userService.findUserDetailById(userId);
+  }
+
+  // 更新用户密码
+  @Post('update_password')
+  updatePassword(@Body() passwordDto: UpdateUserPasswordDto) {
+    return this.userService.updatePassword(passwordDto);
   }
 }
