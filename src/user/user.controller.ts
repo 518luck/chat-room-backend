@@ -136,11 +136,4 @@ export class UserController {
     });
     return '发送成功';
   }
-
-  // 获取用户好友关系
-  @Get('friendship')
-  @RequireLogin()
-  friendship(@UserInfo('userId') userId: number) {
-    return this.userService.getFriendship(userId);
-  }
 }
