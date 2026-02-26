@@ -14,13 +14,31 @@ datasource db {
   provider = "mysql"
 }
 
+// 用户表
 model User {
-  id         Int      @id @default(autoincrement())
-  username   String   @unique @db.VarChar(50)
-  password   String   @db.VarChar(50)
-  nickName   String   @db.VarChar(50)
-  email      String   @db.VarChar(50)
-  headPic    String   @default("") @db.VarChar(100)
-  createTime DateTime @default(now())
-  updateTime DateTime @updatedAt
+  id         Int      @id @default(autoincrement()) // 用户ID
+  username   String   @unique @db.VarChar(50) // 用户名
+  password   String   @db.VarChar(50) // 密码
+  nickName   String   @db.VarChar(50) // 昵称
+  email      String   @db.VarChar(50) // 邮箱
+  headPic    String   @default("") @db.VarChar(100) // 头像
+  createTime DateTime @default(now()) // 创建时间
+  updateTime DateTime @updatedAt // 更新时间
+
+  friends        Friendship[] @relation("userToFriend") // friends        是 user 的好友有哪些。
+  inverseFriends Friendship[] @relation("friendToUser") // inverseFriends 是 user 是哪些人的好友。
+}
+
+// 好友关系表  这本质上是一张中间表，用来记录两个用户之间的好友关系。
+// 这个表是多对多关系,但是跟之前的多对多不太一样,这个是用同一张表,自己关联自己
+model Friendship {
+  //fields: [userId] : 指出当前表中的 userId 列是外键。
+  //references: [id] : 指出这个外键指向 User 表的主键 id。
+  user   User @relation("userToFriend", fields: [userId], references: [id])
+  userId Int
+
+  friend   User @relation("friendToUser", fields: [friendId], references: [id])
+  friendId Int
+
+  @@id([userId, friendId])
 }

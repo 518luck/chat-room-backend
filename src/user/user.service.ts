@@ -11,6 +11,16 @@ import { RegisterUserDto } from '@/user/dto/register-user.dto';
 import { LoginUserDto } from '@/user/dto/login-user.dto';
 import { UpdateUserPasswordDto } from '@/user/dto/update-user-password.dto';
 import { UpdateUserDto } from '@/user/dto/udpate-user.dto';
+import { Prisma } from '@prisma-client';
+
+type SelectedUser = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    username: true;
+    nickName: true;
+    email: true;
+  };
+}>;
 
 @Injectable()
 export class UserService {
@@ -194,5 +204,58 @@ export class UserService {
       this.logger.error(e, UserService);
       return '用户信息修改成功';
     }
+  }
+
+  // 获取用户好友列表
+  async getFriendship(userId: number) {
+    //获取“关系网”
+    const friends = await this.prismaService.friendship.findMany({
+      //OR 运算符 在数据库里，好友关系是有方向的。如果你只查 userId: userId，你只能搜到你主动加的人；如果你只查 friendId: userId，你只能搜到主动加你的人。
+      // 使用 OR 就像是拿着两张名单比对：
+      //  条件 A (userId: userId)：找出所有“我加的人”。
+      //  条件 B (friendId: userId)：找出所有“加我的人”。
+      //  结果：只要满足其中任何一个条件，这条关系记录就会被放入 friends 数组中。
+      where: {
+        OR: [
+          {
+            userId: userId,
+          },
+          {
+            friendId: userId,
+          },
+        ],
+      },
+    });
+
+    //提取并去重
+    const set = new Set<number>();
+    for (let i = 0; i < friends.length; i++) {
+      set.add(friends[i].userId);
+      set.add(friends[i].friendId);
+    }
+
+    const friendIds = [...set].filter((item) => item !== userId);
+
+    const res: SelectedUser[] = [];
+
+    for (let i = 0; i < friendIds.length; i++) {
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: friendIds[i],
+        },
+        select: {
+          id: true,
+          username: true,
+          nickName: true,
+          email: true,
+        },
+      });
+
+      if (user) {
+        res.push(user);
+      }
+    }
+
+    return res;
   }
 }
