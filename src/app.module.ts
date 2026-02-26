@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaService } from './prisma/prisma.service';
-import { PrismaModule } from './prisma/prisma.module';
-import { UserModule } from './user/user.module';
-import { RedisModule } from './redis/redis.module';
-import { EmailModule } from './email/email.module';
+import { AppController } from '@/app.controller';
+import { AppService } from '@/app.service';
+import { PrismaService } from '@/prisma/prisma.service';
+import { PrismaModule } from '@/prisma/prisma.module';
+import { UserModule } from '@/user/user.module';
+import { RedisModule } from '@/redis/redis.module';
+import { EmailModule } from '@/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
+import { AuthGuard } from '@/auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -27,6 +29,13 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [
+    AppService,
+    PrismaService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}
