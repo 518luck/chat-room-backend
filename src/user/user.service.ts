@@ -10,6 +10,7 @@ import { RedisService } from '@/redis/redis.service';
 import { RegisterUserDto } from '@/user/dto/register-user.dto';
 import { LoginUserDto } from '@/user/dto/login-user.dto';
 import { UpdateUserPasswordDto } from '@/user/dto/update-user-password.dto';
+import { UpdateUserDto } from '@/user/dto/udpate-user.dto';
 
 @Injectable()
 export class UserService {
@@ -146,6 +147,52 @@ export class UserService {
     } catch (e) {
       this.logger.error(e, UserService);
       return '密码修改失败';
+    }
+  }
+
+  // 更新用户信息
+  async update(userId: number, updateUserDto: UpdateUserDto) {
+    const captcha = await this.redisService.get(
+      `update_user_captcha_${updateUserDto.email}`,
+    );
+
+    if (!captcha) {
+      throw new HttpException('验证码已失效', HttpStatus.BAD_REQUEST);
+    }
+
+    if (updateUserDto.captcha !== captcha) {
+      throw new HttpException('验证码不正确', HttpStatus.BAD_REQUEST);
+    }
+
+    const foundUser = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!foundUser) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    if (updateUserDto.nickName) {
+      foundUser.nickName = updateUserDto.nickName;
+    }
+
+    if (updateUserDto.headPic) {
+      foundUser.headPic = updateUserDto.headPic;
+    }
+
+    try {
+      await this.prismaService.user.update({
+        where: {
+          id: userId,
+        },
+        data: foundUser,
+      });
+      return '用户信息修改成功';
+    } catch (e) {
+      this.logger.error(e, UserService);
+      return '用户信息修改成功';
     }
   }
 }

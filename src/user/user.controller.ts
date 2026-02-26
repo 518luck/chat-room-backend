@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { UserService } from '@/user/user.service';
 import { RegisterUserDto } from '@/user/dto/register-user.dto';
 import { RedisService } from '@/redis/redis.service';
@@ -7,6 +15,7 @@ import { LoginUserDto } from '@/user/dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { RequireLogin, UserInfo } from '@/custom.decorator';
 import { UpdateUserPasswordDto } from '@/user/dto/update-user-password.dto';
+import { UpdateUserDto } from '@/user/dto/udpate-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -72,5 +81,59 @@ export class UserController {
   @Post('update_password')
   updatePassword(@Body() passwordDto: UpdateUserPasswordDto) {
     return this.userService.updatePassword(passwordDto);
+  }
+
+  // 获取更新密码验证码
+  @Get('update_password/captcha')
+  async updatePasswordCaptcha(@Query('address') address: string) {
+    if (!address) {
+      throw new BadRequestException('邮箱地址不能为空');
+    }
+    const code = Math.random().toString().slice(2, 8);
+
+    await this.redisService.set(
+      `update_password_captcha_${address}`,
+      code,
+      10 * 60,
+    );
+
+    await this.emailService.sendMail({
+      to: address,
+      subject: '更改密码验证码',
+      html: `<p>你的更改密码验证码是 ${code}</p>`,
+    });
+    return '发送成功';
+  }
+
+  // 更新用户信息
+  @Post('update')
+  @RequireLogin()
+  async update(
+    @UserInfo('userId') userId: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return await this.userService.update(userId, updateUserDto);
+  }
+
+  // 获取更新用户信息验证码
+  @Get('update/captcha')
+  async updateCaptcha(@Query('address') address: string) {
+    if (!address) {
+      throw new BadRequestException('邮箱地址不能为空');
+    }
+    const code = Math.random().toString().slice(2, 8);
+
+    await this.redisService.set(
+      `update_user_captcha_${address}`,
+      code,
+      10 * 60,
+    );
+
+    await this.emailService.sendMail({
+      to: address,
+      subject: '更改用户信息验证码',
+      html: `<p>你的验证码是 ${code}</p>`,
+    });
+    return '发送成功';
   }
 }
