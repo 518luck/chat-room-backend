@@ -4,6 +4,7 @@ import { RegisterUserDto } from '@/user/dto/register-user.dto';
 import { RedisService } from '@/redis/redis.service';
 import { EmailService } from '@/email/email.service';
 import { LoginUserDto } from '@/user/dto/login-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('user')
 export class UserController {
@@ -14,6 +15,9 @@ export class UserController {
 
   @Inject(EmailService)
   private emailService: EmailService;
+
+  @Inject(JwtService)
+  private jwtService: JwtService;
 
   // 注册用户
   @Post('register')
@@ -40,6 +44,18 @@ export class UserController {
   @Post('login')
   async userLogin(@Body() loginUser: LoginUserDto) {
     const user = await this.userService.login(loginUser);
-    return user;
+
+    return {
+      user,
+      token: this.jwtService.sign(
+        {
+          userId: user.id,
+          username: user.username,
+        },
+        {
+          expiresIn: '7d',
+        },
+      ),
+    };
   }
 }
