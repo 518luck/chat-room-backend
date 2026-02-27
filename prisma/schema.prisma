@@ -43,7 +43,7 @@ model Friendship {
   @@id([userId, friendId])
 }
 
-//好友申请表
+// 好友申请表
 model FriendRequest {
   id         Int      @id @default(autoincrement()) // 好友请求ID
   fromUserId Int // 请求发送方
@@ -52,4 +52,21 @@ model FriendRequest {
   status     Int      @default(0) // 请求状态 0: 待处理 1: 已同意 2: 已拒绝
   createTime DateTime @default(now()) // 创建时间
   updateTime DateTime @updatedAt // 更新时间
+}
+
+// 聊天室信息
+model Chatroom {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(50) // 聊天室名称
+  type       Boolean  @default(false) // 聊天室类型 true 群聊 false 单聊
+  createTime DateTime @default(now()) // 创建时间
+  updateTime DateTime @updatedAt // 更新时间
+}
+
+// 聊天室里有哪些用户
+model UserChatroom {
+  userId     Int // 用户ID
+  chatroomId Int // 聊天室ID
+
+  @@id([userId, chatroomId])
 }
