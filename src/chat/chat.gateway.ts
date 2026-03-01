@@ -7,6 +7,8 @@ import {
 import { ChatService } from './chat.service';
 //引入 Socket.io 原生的类型定义，保证 TypeScript 的严谨性
 import { Server, Socket } from 'socket.io';
+import { ChatHistoryService } from '@/chat-history/chat-history.service';
+import { Inject } from '@nestjs/common';
 
 //定义“加入房间”时，前端必须传的数据结构
 interface JoinRoomPayload {
@@ -30,6 +32,9 @@ interface SendMessagePayload {
 export class ChatGateway {
   // 依赖注入 ChatService。虽然当前代码还没用到，但为你后续保存聊天记录打下了基础。
   constructor(private readonly chatService: ChatService) {}
+
+  @Inject(ChatHistoryService)
+  private chatHistoryService: ChatHistoryService;
 
   //@WebSocketServer() 装饰器会帮你把底层的 Socket.io Server 实例挂载到 this.server 上。
   //注意区别：Server 代表“整个服务器（上帝视角）”，而 Socket 代表“单个用户的连接”。
@@ -58,9 +63,17 @@ export class ChatGateway {
   // 监听前端发出的 'sendMessage' 事件
   @SubscribeMessage('sendMessage')
   // @MessageBody() 装饰器显式告诉 NestJS：请把前端传来的数据提取出来塞给 payload
-  sendMessage(@MessageBody() payload: SendMessagePayload): void {
+  async sendMessage(@MessageBody() payload: SendMessagePayload): Promise<void> {
     // 同样，提取目标房间号
     const roomName = payload.chatroomId.toString();
+
+    // 保存聊天记录
+    await this.chatHistoryService.add(payload.chatroomId, {
+      content: payload.message.content,
+      type: payload.message.type === 'image' ? 1 : 0,
+      chatroomId: payload.chatroomId,
+      senderId: payload.sendUserId,
+    });
 
     // 广播逻辑：向指定的聊天室发送这条真实的消息。
     // 注意：这里的 this.server.to() 会发给房间里的【所有人】（包括发送者自己）。

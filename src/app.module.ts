@@ -13,6 +13,7 @@ import { FriendshipModule } from './friendship/friendship.module';
 import { ChatroomModule } from './chatroom/chatroom.module';
 import { MinioModule } from './minio/minio.module';
 import { ChatModule } from './chat/chat.module';
+import { ChatHistoryModule } from './chat-history/chat-history.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ChatModule } from './chat/chat.module';
     ChatroomModule,
     MinioModule,
     ChatModule,
+    ChatHistoryModule,
   ],
   controllers: [AppController],
   providers: [

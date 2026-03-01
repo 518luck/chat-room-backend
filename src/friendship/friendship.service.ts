@@ -1,6 +1,6 @@
 import { FriendAddDto } from './dto/friend-add.dto';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { FriendRequest, Prisma } from '@prisma-client';
 
 type SelectedUser = Prisma.UserGetPayload<{
