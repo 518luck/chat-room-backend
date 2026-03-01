@@ -1,5 +1,5 @@
 import { FriendAddDto } from './dto/friend-add.dto';
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma-client';
 
@@ -18,10 +18,35 @@ export class FriendshipService {
 
   // 添加好友
   async add(friendAddDto: FriendAddDto, userId: number) {
+    const friend = await this.prismaService.user.findUnique({
+      where: {
+        username: friendAddDto.username,
+      },
+    });
+
+    if (!friend) {
+      throw new BadRequestException('要添加的 username 不存在');
+    }
+
+    if (friend.id === userId) {
+      throw new BadRequestException('不能添加自己为好友');
+    }
+
+    const found = await this.prismaService.friendship.findMany({
+      where: {
+        userId,
+        friendId: friend.id,
+      },
+    });
+
+    if (found.length) {
+      throw new BadRequestException('该好友已经添加过');
+    }
+
     return await this.prismaService.friendRequest.create({
       data: {
         fromUserId: userId,
-        toUserId: friendAddDto.friendId,
+        toUserId: friend.id,
         reason: friendAddDto.reason,
         status: 0,
       },
