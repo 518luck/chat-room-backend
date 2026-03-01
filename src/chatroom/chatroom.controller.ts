@@ -33,11 +33,11 @@ export class ChatroomController {
 
   // 查看所有群聊
   @Get('list')
-  list(@UserInfo('userId') userId: number) {
+  list(@UserInfo('userId') userId: number, @Query('name') name?: string) {
     if (!userId) {
       throw new BadRequestException('userId 不能为空');
     }
-    return this.chatroomService.list(userId);
+    return this.chatroomService.list(userId, name);
   }
 
   //查询聊天室的所有用户
