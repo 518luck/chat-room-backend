@@ -88,7 +88,7 @@ export class FriendshipService {
   }
 
   // 获取用户好友列表
-  async getFriendship(userId: number) {
+  async getFriendship(userId: number, name: string) {
     //获取“关系网”
     const friends = await this.prismaService.friendship.findMany({
       //OR 运算符 在数据库里，好友关系是有方向的。如果你只查 userId: userId，你只能搜到你主动加的人；如果你只查 friendId: userId，你只能搜到主动加你的人。
@@ -137,6 +137,9 @@ export class FriendshipService {
       }
     }
 
+    if (name) {
+      return res.filter((item: SelectedUser) => item.nickName.includes(name));
+    }
     return res;
   }
 

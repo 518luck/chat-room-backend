@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { FriendshipService } from '@/friendship/friendship.service';
 import { FriendAddDto } from '@/friendship/dto/friend-add.dto';
@@ -50,8 +51,8 @@ export class FriendshipController {
   // 获取用户好友关系
   @Get('list')
   @RequireLogin()
-  friendship(@UserInfo('userId') userId: number) {
-    return this.friendshipService.getFriendship(userId);
+  friendship(@UserInfo('userId') userId: number, @Query('name') name: string) {
+    return this.friendshipService.getFriendship(userId, name);
   }
 
   // 移除好友
