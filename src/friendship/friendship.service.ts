@@ -1,7 +1,7 @@
 import { FriendAddDto } from './dto/friend-add.dto';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma-client';
+import { FriendRequest, Prisma } from '@prisma-client';
 
 type SelectedUser = Prisma.UserGetPayload<{
   select: {
@@ -11,6 +11,10 @@ type SelectedUser = Prisma.UserGetPayload<{
     email: true;
   };
 }>;
+type FriendRequestWithUser = FriendRequest & {
+  fromUser?: SelectedUser | null;
+  toUser?: SelectedUser | null;
+};
 @Injectable()
 export class FriendshipService {
   @Inject(PrismaService)
@@ -55,11 +59,66 @@ export class FriendshipService {
 
   // 请求列表
   async list(userId: number) {
-    return this.prismaService.friendRequest.findMany({
+    const fromMeRequest = await this.prismaService.friendRequest.findMany({
       where: {
         fromUserId: userId,
       },
     });
+
+    const toMeRequest = await this.prismaService.friendRequest.findMany({
+      where: {
+        toUserId: userId,
+      },
+    });
+
+    const res = {
+      toMe: [] as FriendRequestWithUser[],
+      fromMe: [] as FriendRequestWithUser[],
+    };
+
+    for (let i = 0; i < fromMeRequest.length; i++) {
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: fromMeRequest[i].toUserId,
+        },
+        select: {
+          id: true,
+          username: true,
+          nickName: true,
+          email: true,
+          headPic: true,
+          createTime: true,
+        },
+      });
+
+      res.fromMe.push({
+        ...fromMeRequest[i],
+        toUser: user,
+      });
+    }
+
+    for (let i = 0; i < toMeRequest.length; i++) {
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: toMeRequest[i].fromUserId,
+        },
+        select: {
+          id: true,
+          username: true,
+          nickName: true,
+          email: true,
+          headPic: true,
+          createTime: true,
+        },
+      });
+
+      res.toMe.push({
+        ...toMeRequest[i],
+        fromUser: user,
+      });
+    }
+
+    return res;
   }
 
   // 同意好友请求
