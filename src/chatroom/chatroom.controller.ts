@@ -81,4 +81,16 @@ export class ChatroomController {
     }
     return this.chatroomService.quit(id, quitUserId);
   }
+
+  // 查询一对一聊天房间
+  @Get('findChatroom')
+  findChatroom(
+    @Query('userId1') userId1: string,
+    @Query('userId2') userId2: string,
+  ) {
+    if (!userId1 || !userId2) {
+      throw new BadRequestException('用户 id 不能为空');
+    }
+    return this.chatroomService.queryOneToOneChatroom(+userId1, +userId2);
+  }
 }

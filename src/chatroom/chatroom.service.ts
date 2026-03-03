@@ -53,7 +53,7 @@ export class ChatroomService {
         chatroomId: id,
       },
     });
-    return '创建成功';
+    return id;
   }
 
   // 创建群聊房间
@@ -126,6 +126,17 @@ export class ChatroomService {
           userId: true,
         },
       });
+
+      // 过滤出用户2也加入的聊天室
+      if (chatrooms[i].type === false) {
+        const user = await this.prismaService.user.findUnique({
+          where: {
+            id: userIds.filter((item) => item.userId !== userId)[0].userId,
+          },
+        });
+        chatrooms[i].name = user?.nickName || '未知用户';
+      }
+
       res.push({
         ...chatrooms[i],
         userCount: userIds.length, // 加入群聊的用户数量
@@ -221,5 +232,53 @@ export class ChatroomService {
     });
 
     return '退出成功';
+  }
+
+  // 查询一对一聊天房间
+  async queryOneToOneChatroom(userId1: number, userId2: number) {
+    // 先获取两个人的房间清单
+    // 先查询用户1加入的所有聊天室
+    const chatrooms = await this.prismaService.userChatroom.findMany({
+      where: {
+        userId: userId1,
+      },
+    });
+
+    // 再查询用户2加入的所有聊天室
+    const chatrooms2 = await this.prismaService.userChatroom.findMany({
+      where: {
+        userId: userId2,
+      },
+    });
+
+    let res: number | undefined;
+    for (let i = 0; i < chatrooms.length; i++) {
+      // 过滤出群聊
+      const chatroom = await this.prismaService.chatroom.findFirst({
+        where: {
+          id: chatrooms[i].chatroomId,
+        },
+      });
+
+      if (!chatroom) {
+        return;
+      }
+
+      if (chatroom.type === true) {
+        continue;
+      }
+
+      // 寻找交集：用户1和用户2都加入的聊天室
+      const found = chatrooms2.find(
+        (item2) => item2.chatroomId === chatroom.id,
+      );
+
+      if (found) {
+        res = found.chatroomId;
+        break; // 找到了！立刻停止循环，节省性能。
+      }
+    }
+
+    return res;
   }
 }
