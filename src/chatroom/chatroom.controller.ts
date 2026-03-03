@@ -60,14 +60,14 @@ export class ChatroomController {
 
   // 加入群聊
   @Get('join/:id')
-  join(@Param('id') id: number, @Query('joinUserId') joinUserId: number) {
+  join(@Param('id') id: number, @Query('joinUsername') joinUsername: string) {
     if (!id) {
       throw new BadRequestException('id 不能为空');
     }
-    if (!joinUserId) {
-      throw new BadRequestException('joinUserId 不能为空');
+    if (!joinUsername) {
+      throw new BadRequestException('joinUsername 不能为空');
     }
-    return this.chatroomService.join(id, joinUserId);
+    return this.chatroomService.join(id, joinUsername);
   }
 
   // 退出群聊

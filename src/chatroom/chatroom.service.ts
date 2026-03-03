@@ -186,27 +186,39 @@ export class ChatroomService {
   }
 
   // 加入群聊
-  async join(id: number, userId: number) {
+  async join(id: number, username: string) {
     const chatroom = await this.prismaService.chatroom.findUnique({
       where: {
         id,
       },
     });
+
     if (!chatroom) {
       throw new BadRequestException('聊天室不存在');
     }
+
     if (chatroom.type === false) {
       throw new BadRequestException('一对一聊天室不能加人');
     }
 
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        username,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
     await this.prismaService.userChatroom.create({
       data: {
-        userId,
+        userId: user.id,
         chatroomId: id,
       },
     });
 
-    return '加入成功';
+    return chatroom.id;
   }
 
   // 退出群聊
