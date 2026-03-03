@@ -9,6 +9,7 @@ import { ChatService } from './chat.service';
 import { Server, Socket } from 'socket.io';
 import { ChatHistoryService } from '@/chat-history/chat-history.service';
 import { Inject } from '@nestjs/common';
+import { UserService } from '@/user/user.service';
 
 //定义“加入房间”时，前端必须传的数据结构
 interface JoinRoomPayload {
@@ -35,6 +36,8 @@ export class ChatGateway {
 
   @Inject(ChatHistoryService)
   private chatHistoryService: ChatHistoryService;
+  @Inject(UserService)
+  private userService: UserService;
 
   //@WebSocketServer() 装饰器会帮你把底层的 Socket.io Server 实例挂载到 this.server 上。
   //注意区别：Server 代表“整个服务器（上帝视角）”，而 Socket 代表“单个用户的连接”。
@@ -68,12 +71,14 @@ export class ChatGateway {
     const roomName = payload.chatroomId.toString();
 
     // 保存聊天记录
-    await this.chatHistoryService.add(payload.chatroomId, {
+    const history = await this.chatHistoryService.add(payload.chatroomId, {
       content: payload.message.content,
       type: payload.message.type === 'image' ? 1 : 0,
       chatroomId: payload.chatroomId,
       senderId: payload.sendUserId,
     });
+
+    const sender = await this.userService.findUserDetailById(history.senderId);
 
     // 广播逻辑：向指定的聊天室发送这条真实的消息。
     // 注意：这里的 this.server.to() 会发给房间里的【所有人】（包括发送者自己）。
@@ -81,7 +86,10 @@ export class ChatGateway {
     this.server.to(roomName).emit('message', {
       type: 'sendMessage',
       userId: payload.sendUserId,
-      message: payload.message,
+      message: {
+        ...history,
+        sender,
+      },
     });
   }
 }

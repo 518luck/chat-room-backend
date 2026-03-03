@@ -8,5 +8,6 @@ import { EmailModule } from '@/email/email.module';
   imports: [RedisModule, EmailModule],
   controllers: [UserController],
   providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

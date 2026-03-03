@@ -81,6 +81,9 @@ export class ChatroomService {
 
   // 查看所有群聊
   async list(userId: number, name?: string) {
+    // 排除掉 字符串 "undefined"、空字符串 ""、以及纯空格
+    const effectiveName =
+      name && name !== 'undefined' && name.trim() !== '' ? name : undefined;
     //findMany: Prisma 的方法，用于查询多条记录。如果没有匹配项，它会返回一个空数组 [] 而不是报错。
     const chatroomIds = await this.prismaService.userChatroom.findMany({
       where: {
@@ -90,15 +93,20 @@ export class ChatroomService {
         chatroomId: true,
       },
     });
+
     const chatrooms = await this.prismaService.chatroom.findMany({
       where: {
         id: {
           //一次性处理一批特定的数据，而不是一个一个去求数据库。
           in: chatroomIds.map((item) => item.chatroomId),
         },
-        name: {
-          contains: name,
-        },
+        ...(effectiveName
+          ? {
+              name: {
+                contains: name,
+              },
+            }
+          : {}),
       },
       select: {
         id: true,
