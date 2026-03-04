@@ -82,3 +82,12 @@ model ChatHistory {
   createTime DateTime @default(now()) // 创建时间
   updateTime DateTime @updatedAt // 更新时间
 }
+
+// 收藏表
+model Favorite {
+  id            Int      @id @default(autoincrement())
+  chatHistoryId Int // 收藏的聊天记录ID
+  uerId         Int // 收藏者ID
+  createTime    DateTime @default(now())
+  updateTime    DateTime @updatedAt
+}
