@@ -22,7 +22,7 @@ interface SendMessagePayload {
   sendUserId: number;
   chatroomId: number;
   message: {
-    type: 'text' | 'image';
+    type: 'text' | 'image' | 'file';
     content: string;
   };
 }
@@ -70,10 +70,15 @@ export class ChatGateway {
     // 同样，提取目标房间号
     const roomName = payload.chatroomId.toString();
 
+    const map = {
+      text: 0,
+      image: 1,
+      file: 2,
+    };
     // 保存聊天记录
     const history = await this.chatHistoryService.add(payload.chatroomId, {
       content: payload.message.content,
-      type: payload.message.type === 'image' ? 1 : 0,
+      type: map[payload.message.type],
       chatroomId: payload.chatroomId,
       senderId: payload.sendUserId,
     });
